@@ -2,38 +2,59 @@ using UnityEngine;
 
 public class SensorSystem : MonoBehaviour
 {
-    public float maxDistance = 20f;
+    public float maxDistance = 20f; // Maximum ray length
 
+    // Returns normalized distances (0 = very close, 1 = no obstacle)
     public float[] GetSensors()
     {
-        float[] sensors = new float[5];
-        sensors[0] = CastRay(transform.forward); // front
-        sensors[1] = CastRay(Quaternion.Euler(0, -30, 0) * transform.forward); // front-left
-        sensors[2] = CastRay(Quaternion.Euler(0, 30, 0) * transform.forward);  // front-right
-        sensors[3] = CastRay(Quaternion.Euler(0, -60, 0) * transform.forward); // left
-        sensors[4] = CastRay(Quaternion.Euler(0, 60, 0) * transform.forward);  // right
-        return sensors;
+        return new float[]
+        {
+            CastRay(transform.forward), // Front
+            CastRay(Quaternion.Euler(0, -30, 0) * transform.forward), // Front-left
+            CastRay(Quaternion.Euler(0, 30, 0) * transform.forward),  // Front-right
+            CastRay(Quaternion.Euler(0, -60, 0) * transform.forward), // Far left
+            CastRay(Quaternion.Euler(0, 60, 0) * transform.forward),  // Far right
+            CastRay(-transform.right), // Left side
+            CastRay(transform.right) // Right side
+        };
     }
 
+    // Casts a ray and returns normalized distance
     float CastRay(Vector3 dir)
     {
         if (Physics.Raycast(transform.position, dir, out RaycastHit hit, maxDistance))
-            return hit.distance / maxDistance; // normalized
+            return hit.distance / maxDistance;
+
+        // No hit = max distance
         return 1f;
     }
 
+    // Draw rays in editor for debugging
     void OnDrawGizmos()
     {
-        // Draw rays for debugging
-        Vector3[] directions = {
+        Vector3[] directions =
+        {
             transform.forward,
             Quaternion.Euler(0,-30,0)*transform.forward,
             Quaternion.Euler(0,30,0)*transform.forward,
             Quaternion.Euler(0,-60,0)*transform.forward,
-            Quaternion.Euler(0,60,0)*transform.forward
+            Quaternion.Euler(0,60,0)*transform.forward,
+            -transform.right,
+            transform.right
         };
-        Gizmos.color = Color.red;
-        foreach (var d in directions)
-            Gizmos.DrawRay(transform.position, d * maxDistance);
+
+        for (int i = 0; i < directions.Length; i++)
+        {
+            if (Physics.Raycast(transform.position, directions[i], out RaycastHit hit, maxDistance))
+            {
+                Gizmos.color = Color.green;
+                Gizmos.DrawLine(transform.position, hit.point);
+            }
+            else
+            {
+                Gizmos.color = Color.red;
+                Gizmos.DrawRay(transform.position, directions[i] * maxDistance);
+            }
+        }
     }
 }

@@ -1,18 +1,43 @@
 using UnityEngine;
 
+[RequireComponent(typeof(CarController))]
 public class AIDriver : MonoBehaviour
 {
-    public NeuralNetwork net;
-    public SensorSystem sensors;
-    public CarController car;
+    public NeuralNetwork net; // Trained neural network
+    public SensorSystem sensors; // Sensor input system
 
-    void Update()
+    private float smoothedSteer = 0f; // Helps reduce jittery steering
+    public bool canDrive = false; // Toggle AI control
+
+    private CarController car;
+
+    void Awake()
     {
-        if (net == null || sensors == null || car == null) return;
+        car = GetComponent<CarController>();
+    }
 
-        float[] inputs = sensors.GetSensors();
-        float[] output = net.Forward(inputs);
+    void FixedUpdate()
+    {
+        if (!canDrive)
+        {
+            return;
+        }
+        // Get environment data from sensors
+        float[] input = sensors.GetSensors();
 
-        car.Move(output[0], output[1]);
+        // Feed into neural network
+        float[] output = net.Forward(input);
+
+        // Output[0] = acceleration, Output[1] = steering
+        float targetSteer = Mathf.Clamp(output[1], -1f, 1f);
+
+        // Smooth steering to avoid sharp jitter
+        smoothedSteer = Mathf.Lerp(smoothedSteer, targetSteer, 0.15f);
+
+        // Clamp acceleration to keep car moving forward
+        float accel = Mathf.Clamp(output[0], 0.3f, 1f);
+
+        // Move the car
+        car.Move(accel, smoothedSteer);
     }
 }

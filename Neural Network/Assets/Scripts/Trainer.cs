@@ -1,87 +1,82 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public class Trainer : MonoBehaviour
 {
-    public string fileName = "training_data.csv";
-    public int epochs = 2;
+    public NeuralNetwork net;
+
     public float learningRate = 0.01f;
+    public int currentEpoch = 0;
 
-    [HideInInspector] public NeuralNetwork net;
-    [HideInInspector] public DatasetLoader data;
-    [HideInInspector] public bool IsTrainingDone = false;
+    public bool isTraining = false;
 
-    private int currentEpoch = 0;
-    private int sampleIndex = 0;
+    public List<float> errorHistory = new List<float>();
+
+    // Stored dataset
+    private List<float[]> inputs = new List<float[]>();
+    private List<float[]> outputs = new List<float[]>();
 
     void Awake()
     {
-        string path = Application.persistentDataPath + "/" + fileName;
-        data = new DatasetLoader();
-        data.Load(path);
-
+        // Create neural network and assign learning rate
         net = new NeuralNetwork();
         net.learningRate = learningRate;
-
-        IsTrainingDone = false;
-        currentEpoch = 0;
-        sampleIndex = 0;
-
-        this.enabled = false; // controlled by GameManager
     }
 
-    public void StartTraining()
+    // Load dataset into trainer
+    public void LoadDataset(DatasetLoader loader)
     {
-        if (data.inputs.Count == 0)
+        inputs = loader.inputs;
+        outputs = loader.outputs;
+
+        Debug.Log("Dataset loaded: " + inputs.Count + " samples");
+    }
+
+    // Train one full pass over dataset (1 epoch)
+    public float TrainEpoch()
+    {
+        if (inputs.Count == 0) return 0f;
+
+        float totalError = 0f;
+
+        for (int i = 0; i < inputs.Count; i++)
         {
-            Debug.LogError("No dataset found! Record data first.");
-            return;
+            // Forward pass
+            float[] prediction = net.Forward(inputs[i]);
+
+            // Compute Mean Squared Error (MSE)
+            for (int j = 0; j < prediction.Length; j++)
+            {
+                float diff = prediction[j] - outputs[i][j];
+                totalError += diff * diff;
+            }
+
+            // Backpropagation step
+            net.Backward(inputs[i], outputs[i]);
         }
 
-        IsTrainingDone = false;
-        currentEpoch = 0;
-        sampleIndex = 0;
-        this.enabled = true;
+        currentEpoch++;
+
+        float mse = totalError / inputs.Count;
+        return mse;
     }
 
-    void Update()
+    // Train multiple epochs in sequence
+    public void TrainMultipleEpochs(int epochs)
     {
-        if (IsTrainingDone || data.inputs.Count == 0) return;
+        isTraining = true;
+        errorHistory.Clear();
 
-        float[] input = data.inputs[sampleIndex];
-        float[] expected = data.outputs[sampleIndex];
-
-        net.Forward(input);
-        net.Backward(input, expected);
-
-        sampleIndex++;
-        if (sampleIndex >= data.inputs.Count)
+        for (int e = 0; e < epochs; e++)
         {
-            sampleIndex = 0;
-            currentEpoch++;
+            float error = TrainEpoch();
+            errorHistory.Add(error);
 
-            // Optional MSE calculation per epoch
-            float mse = 0;
-            for (int i = 0; i < data.inputs.Count; i++)
-            {
-                float[] pred = net.Forward(data.inputs[i]);
-                for (int j = 0; j < pred.Length; j++)
-                    mse += Mathf.Pow(pred[j] - data.outputs[i][j], 2);
-            }
-            mse /= data.inputs.Count;
-
-            Debug.Log("Epoch " + currentEpoch + " completed. MSE = " + mse);
-
-            if (currentEpoch >= epochs)
-            {
-                IsTrainingDone = true;
-                this.enabled = false;
-                Debug.Log("Training complete!");
-            }
+            Debug.Log("Epoch " + currentEpoch + " MSE: " + error);
         }
-    }
 
-    public NeuralNetwork GetTrainedNetwork()
-    {
-        return net;
+        isTraining = false;
+
+        Debug.Log("Training complete. Epochs: " + currentEpoch);
     }
 }

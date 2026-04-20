@@ -1,85 +1,73 @@
+// Controls switching between player and AI, training, and dataset management
 using UnityEngine;
 
 public class GameManager : MonoBehaviour
 {
-    public enum Phase { DataCollection, Training, Autonomous }
-    public Phase currentPhase = Phase.DataCollection;
+    public Trainer trainer;          // Neural network trainer
+    public AIDriver ai;              // AI driving script
+    public PlayerInput player;       // Player controller
+    public DataRecorder recorder;   // Data storage
 
-    [Header("References (Auto-Assign if empty)")]
-    public CarController playerCar;
-    public DataRecorder dataRecorder;
-    public Trainer trainer;
-    public AIDriver aiDriver;
+    public string datasetFile = "training_data.csv";
+    public int epochsToTrain = 50;   // Number of training iterations
 
     void Start()
     {
-        AutoAssign();
-        ResetDataset();
+        // Give AI access to the trained network but disable it initially
+        ai.net = trainer.net;
+        ai.canDrive = false;
 
-        // Phase 0: Player drives
-        currentPhase = Phase.DataCollection;
-        playerCar.enabled = true;
-        dataRecorder.enabled = true;
-
-        trainer.enabled = false;
-        aiDriver.enabled = false;
-
-        Debug.Log("Phase 0: Data Collection started");
+        // Player starts in control
+        player.isActive = true;
     }
 
     void Update()
     {
-        switch (currentPhase)
-        {
-            case Phase.DataCollection:
-                // Press T to start training
-                if (Input.GetKeyDown(KeyCode.T))
-                    StartTraining();
-                break;
+        // Reset dataset (clear file)
+        if (Input.GetKeyDown(KeyCode.C))
+            ResetDataset();
 
-            case Phase.Training:
-                if (trainer.IsTrainingDone)
-                    StartAutonomous();
-                break;
+        // Train AI and switch control to it
+        if (Input.GetKeyDown(KeyCode.T))
+            TrainAndStartAI();
 
-            case Phase.Autonomous:
-                // AI drives automatically
-                break;
-        }
+        // Switch back to player control
+        if (Input.GetKeyDown(KeyCode.P))
+            UsePlayer();
     }
 
-    void StartTraining()
+    // Train neural network using recorded data, then enable AI driving
+    public void TrainAndStartAI()
     {
-        currentPhase = Phase.Training;
-        Debug.Log("Phase 1: Training started");
+        DatasetLoader loader = new DatasetLoader();
+        string path = Application.persistentDataPath + "/" + datasetFile;
 
-        playerCar.enabled = false;
-        dataRecorder.enabled = false;
+        loader.Load(path);
+        trainer.LoadDataset(loader);
 
-        trainer.enabled = true;
-        trainer.StartTraining();
+        Debug.Log("Training started...");
+        trainer.TrainMultipleEpochs(epochsToTrain);
+
+        // Disable player and enable AI
+        player.isActive = false;
+        ai.canDrive = true;
+
+        Debug.Log("AI ENABLED after training");
     }
 
-    void StartAutonomous()
+    // Switch back to manual player driving
+    public void UsePlayer()
     {
-        currentPhase = Phase.Autonomous;
-        Debug.Log("Phase 2: Autonomous AI started");
+        ai.canDrive = false;
+        player.isActive = true;
 
-        aiDriver.net = trainer.GetTrainedNetwork();
-        aiDriver.enabled = true;
+        Debug.Log("Player control");
     }
 
-    void ResetDataset()
+    // Deletes and recreates dataset file
+    public void ResetDataset()
     {
-        if (dataRecorder != null)
-            dataRecorder.ResetData();
-    }
-
-    void AutoAssign()
-    {
-        if (playerCar == null) playerCar = FindObjectOfType<CarController>();
-        if (dataRecorder == null && playerCar != null) dataRecorder = playerCar.GetComponent<DataRecorder>();
-        if (trainer == null) trainer = FindObjectOfType<Trainer>();
-        if (aiDriver == null) aiDriver = FindObjectOfType<AIDriver>();
+        recorder.ResetData();
+        Debug.Log("Dataset file reset.");
     }
 }
