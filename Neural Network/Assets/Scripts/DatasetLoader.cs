@@ -4,21 +4,21 @@ using UnityEngine;
 
 public class DatasetLoader
 {
-    public List<float[]> inputs = new List<float[]>(); // Sensor inputs
-    public List<float[]> outputs = new List<float[]>(); // Expected outputs (accel, steer)
+    public List<float[]> inputs = new List<float[]>(); // sensor inputs
+    public List<float[]> outputs = new List<float[]>(); // expected outputs (accel, steer)
 
     public void Load(string path)
     {
-        // Ensure file exists before attempting to read
+        // ensure file exists before attempting to read
         if (!File.Exists(path))
         {
-            Debug.LogWarning("Dataset not found: " + path);
+            Debug.LogWarning("dataset not found: " + path);
             return;
         }
 
         string[] lines = File.ReadAllLines(path);
 
-        // Skip first line (header row)
+        // skip first line (header row)
         for (int i = 1; i < lines.Length; i++)
         {
             if (string.IsNullOrWhiteSpace(lines[i])) continue;
@@ -28,7 +28,7 @@ public class DatasetLoader
             // 7 sensor inputs (raycast distances)
             float[] inp = new float[7];
 
-            // 2 outputs: acceleration + steering
+            // 2 outputs acceleration + steering
             float[] outp = new float[2];
 
             // 7 inputs
@@ -43,6 +43,6 @@ public class DatasetLoader
             outputs.Add(outp);
         }
 
-        Debug.Log("Loaded " + inputs.Count + " samples.");
+        Debug.Log("loaded " + inputs.Count + " samples.");
     }
 }

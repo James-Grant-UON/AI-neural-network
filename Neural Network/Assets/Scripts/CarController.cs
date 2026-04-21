@@ -3,12 +3,12 @@ using UnityEngine;
 [RequireComponent(typeof(Rigidbody))]
 public class CarController : MonoBehaviour
 {
-    public float speed = 10f; // Forward movement speed
-    public float turnSpeed = 50f; // Turning speed
+    public float speed = 10f; // forward movement speed
+    public float turnSpeed = 50f; // turning speed
 
     private Rigidbody rb;
 
-    // Stored spawn position (used for resetting)
+    // stored spawn position (used for resetting)
     private Vector3 startPosition;
     private Quaternion startRotation;
 
@@ -16,7 +16,7 @@ public class CarController : MonoBehaviour
     {
         rb = GetComponent<Rigidbody>();
 
-        // Prevent car from tipping over
+        // prevent car from tipping over
         rb.constraints =
             RigidbodyConstraints.FreezeRotationX |
             RigidbodyConstraints.FreezeRotationZ;
@@ -24,40 +24,40 @@ public class CarController : MonoBehaviour
 
     void Start()
     {
-        // Save initial position and rotation
+        // save initial position and rotation
         startPosition = transform.position;
         startRotation = transform.rotation;
     }
 
-    // Moves the car using Rigidbody for physics consistency
+    // moves the car using Rigidbody for physics consistency
     public void Move(float accel, float steer)
     {
-        // Forward movement
+        // forward movement
         Vector3 move =
             transform.forward * accel * speed * Time.fixedDeltaTime;
 
         rb.MovePosition(rb.position + move);
 
-        // Rotation (steering)
+        // rotation (steering)
         float turn = steer * turnSpeed * Time.fixedDeltaTime;
 
         Quaternion rotation = Quaternion.Euler(0f, turn, 0f);
         rb.MoveRotation(rb.rotation * rotation);
     }
 
-    // Resets car to starting position after collision
+    // resets car to starting position after collision
     public void ResetCar()
     {
-        // Stop all motion
+        // stop all motion
         rb.linearVelocity = Vector3.zero;
         rb.angularVelocity = Vector3.zero;
 
-        // Reset transform
+        // reset transform
         transform.position = startPosition;
         transform.rotation = startRotation;
     }
 
-    // Detect collisions with walls and reset
+    // detect collisions with walls and reset
     void OnCollisionEnter(Collision collision)
     {
         if (collision.gameObject.CompareTag("Wall"))

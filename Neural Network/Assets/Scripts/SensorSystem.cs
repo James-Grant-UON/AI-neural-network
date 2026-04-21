@@ -2,14 +2,14 @@ using UnityEngine;
 
 public class SensorSystem : MonoBehaviour
 {
-    public float maxDistance = 20f; // Maximum ray length
+    public float maxDistance = 20f; // maximum ray length
 
-    // Returns normalized distances (0 = very close, 1 = no obstacle)
+    // returns normalized distances (0 = very close, 1 = no obstacle)
     public float[] GetSensors()
     {
         return new float[]
         {
-            CastRay(transform.forward), // Front
+            CastRay(transform.forward), // Front side
             CastRay(Quaternion.Euler(0, -30, 0) * transform.forward), // Front-left
             CastRay(Quaternion.Euler(0, 30, 0) * transform.forward),  // Front-right
             CastRay(Quaternion.Euler(0, -60, 0) * transform.forward), // Far left
@@ -19,17 +19,17 @@ public class SensorSystem : MonoBehaviour
         };
     }
 
-    // Casts a ray and returns normalized distance
+    // casts a ray and returns normalized distance
     float CastRay(Vector3 dir)
     {
         if (Physics.Raycast(transform.position, dir, out RaycastHit hit, maxDistance))
             return hit.distance / maxDistance;
 
-        // No hit = max distance
+        // no hit = max distance
         return 1f;
     }
 
-    // Draw rays in editor for debugging
+    // draw rays in editor for debugging
     void OnDrawGizmos()
     {
         Vector3[] directions =

@@ -12,27 +12,27 @@ public class Trainer : MonoBehaviour
 
     public List<float> errorHistory = new List<float>();
 
-    // Stored dataset
+    //stored dataset
     private List<float[]> inputs = new List<float[]>();
     private List<float[]> outputs = new List<float[]>();
 
     void Awake()
     {
-        // Create neural network and assign learning rate
+        // create neural network and assign learning rate
         net = new NeuralNetwork();
         net.learningRate = learningRate;
     }
 
-    // Load dataset into trainer
+    // load dataset into trainer
     public void LoadDataset(DatasetLoader loader)
     {
         inputs = loader.inputs;
         outputs = loader.outputs;
 
-        Debug.Log("Dataset loaded: " + inputs.Count + " samples");
+        Debug.Log("dataset loaded: " + inputs.Count + " samples");
     }
 
-    // Train one full pass over dataset (1 epoch)
+    // train one full pass over dataset (1 epoch)
     public float TrainEpoch()
     {
         if (inputs.Count == 0) return 0f;
@@ -41,17 +41,17 @@ public class Trainer : MonoBehaviour
 
         for (int i = 0; i < inputs.Count; i++)
         {
-            // Forward pass
+            // forward pass
             float[] prediction = net.Forward(inputs[i]);
 
-            // Compute Mean Squared Error (MSE)
+            // compute Mean Squared Error (MSE)
             for (int j = 0; j < prediction.Length; j++)
             {
                 float diff = prediction[j] - outputs[i][j];
                 totalError += diff * diff;
             }
 
-            // Backpropagation step
+            // backpropagation step
             net.Backward(inputs[i], outputs[i]);
         }
 
@@ -61,7 +61,7 @@ public class Trainer : MonoBehaviour
         return mse;
     }
 
-    // Train multiple epochs in sequence
+    // train multiple epochs in sequence
     public void TrainMultipleEpochs(int epochs)
     {
         isTraining = true;
@@ -72,11 +72,11 @@ public class Trainer : MonoBehaviour
             float error = TrainEpoch();
             errorHistory.Add(error);
 
-            Debug.Log("Epoch " + currentEpoch + " MSE: " + error);
+            Debug.Log("epoch " + currentEpoch + " MSE: " + error);
         }
 
         isTraining = false;
 
-        Debug.Log("Training complete. Epochs: " + currentEpoch);
+        Debug.Log("training complete. Epochs: " + currentEpoch);
     }
 }

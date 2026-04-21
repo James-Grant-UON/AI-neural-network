@@ -7,7 +7,7 @@ public class PlayerInput : MonoBehaviour
     public DataRecorder recorder; //saves training data
 
     public bool isActive = true;
-    public bool recordData = true; // NEW toggle
+    public bool recordData = true; // toggle
 
     private CarController car;
 
