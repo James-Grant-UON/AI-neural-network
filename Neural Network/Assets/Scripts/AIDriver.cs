@@ -1,6 +1,5 @@
 using UnityEngine;
 
-[RequireComponent(typeof(CarController))]
 public class AIDriver : MonoBehaviour
 {
     public NeuralNetwork net; // trained neural network

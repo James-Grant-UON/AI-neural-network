@@ -1,6 +1,5 @@
 using UnityEngine;
 
-[RequireComponent(typeof(CarController))]
 public class PlayerInput : MonoBehaviour
 {
     public SensorSystem sensors; //ref fir raycast sensor system
